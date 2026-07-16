@@ -1,0 +1,23 @@
+{
+  "objetivo": "especialista_para_imoveis_ate_355000",
+  "modelo": "CatBoostRegressor",
+  "target": "log1p_preco",
+  "loss_function": "RMSE",
+  "sample_weight": "1 / preco ** 2, normalizado para media 1",
+  "alpha": 2.0,
+  "iterations": 600,
+  "learning_rate": 0.03,
+  "depth": 7,
+  "l2_leaf_reg": 5.0,
+  "random_strength": 0.0,
+  "bootstrap_type": "Bayesian",
+  "bagging_temperature": 1.0,
+  "boosting_type": "Ordered",
+  "random_seed": 42,
+  "correspondencia": 0.0,
+  "fator_calibracao_final": 0.914489,
+  "rmspe_oof_ate_355k_bruto": 0.209849,
+  "rmspe_oof_ate_355k_calibrado_crossfit": 0.189008,
+  "quantidade_oof_ate_355k": 1178,
+  "observacao": "O fator final foi estimado nas previsoes OOF dos imoveis ate R$ 355 mil. O modelo ainda nao foi treinado em toda a base nem usado em submission."
+}

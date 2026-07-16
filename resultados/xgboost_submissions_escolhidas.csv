@@ -1,0 +1,6 @@
+ordem,nome,arquivo,modo_bairro,n_estimators,learning_rate,grow_policy,max_depth,max_leaves,min_child_weight,subsample,colsample_bytree,reg_alpha,reg_lambda,gamma,max_cat_threshold,rmspe_bloco,rmspe_kfold
+1,equilibrado,submission_xgb_01_equilibrado_corr30.csv,nativo,800,0.03,depthwise,4,0,12,0.8,0.8,0.2,3.0,0.0,64,0.217691,0.230592
+2,gamma,submission_xgb_02_gamma_corr30.csv,nativo,800,0.03,depthwise,4,0,1,0.8,0.8,0.05,1.0,0.1,64,0.217641,0.230907
+3,1200_arvores,submission_xgb_03_1200_arvores_corr30.csv,nativo,1200,0.02,depthwise,4,0,12,0.8,0.8,0.05,1.0,0.0,64,0.217751,0.231216
+4,300_arvores_bloco_id,submission_xgb_04_300_arvores_bloco_id_corr30.csv,nativo,300,0.08,depthwise,4,0,1,0.8,0.8,0.05,1.0,0.0,64,0.216703,0.235287
+5,bairro_target_m2,submission_xgb_05_bairro_target_m2_corr30.csv,target_m2,800,0.03,depthwise,4,0,12,0.8,0.8,0.2,3.0,0.0,64,0.220614,0.232444

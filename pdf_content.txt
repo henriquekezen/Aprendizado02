@@ -1,0 +1,403 @@
+﻿=== PAGINA 1 ===
+Introdu├º├úo ao Aprendizado de M├íquina
+Classificador de Aprova├º├úo de Cr├⌐dito
+Projeto e implementa├º├úo de um classificador bin├írio de risco de cr├⌐dito
+com pipeline de pr├⌐-processamento, sele├º├úo de atributos
+e compara├º├úo de modelos, culminando em um LightGBM otimizado
+Aluno:Henrique Kezen V. H. Leite
+Reposit├│rio:
+Ambiente t├⌐cnico:Python 3.14 ΓÇö Pandas, NumPy, Scikit-learn,
+LightGBM, XGBoost, Matplotlib, Seaborn
+Rio de Janeiro, 16 de julho de 2026
+
+=== PAGINA 2 ===
+Sum├írio
+Resumo 1
+1 Objetivo do Projeto 1
+2 Descri├º├úo dos Dados 1
+2.1 Vari├ível alvo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1
+2.2 Tipos de vari├íveis . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 1
+2.3 Valores faltantes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+2.4 Vari├íveis constantes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+2.5 Valores extremos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+3 Metodologia 2
+3.1 Estrat├⌐gia geral . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 2
+3.2 Duas m├⌐tricas de valida├º├úo distintas . . . . . . . . . . . . . . . . . . . . . . . . . 2
+3.3 Compara├º├úo de modelos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+4 Pr├⌐-processamento dos Dados 3
+4.1 Objetivo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+4.2 Decis├╡es de pr├⌐-processamento . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+4.3 Resultado . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+5 Sele├º├úo de Atributos 4
+5.1 Objetivo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+5.2 Metodologia de sele├º├úo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+5.3 Vari├íveis mais importantes . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+5.4 Features raras . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+6 Modelagem e Treinamento 5
+6.1 Objetivo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+6.2 Resultados comparativos . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+6.3 Tentativa defeature engineering(Fase 2.2) . . . . . . . . . . . . . . . . . . . . . . 6
+7 Otimiza├º├úo e Submiss├úo 6
+7.1 Objetivo . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+7.2 Escolha do modelo e base . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+7.3 Ajuste de threshold . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+7.4 Ensemble de folds . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+7.5 Ajuste den_estimatorsΓÇö o refinamento que funcionou . . . . . . . . . . . . . . 7
+7.6 Threshold fino no modelo final . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+8 Discuss├úo dos Resultados 9
+8.1 Por que o LightGBM superou os demais? . . . . . . . . . . . . . . . . . . . . . . 9
+8.2 Por que afeature engineeringn├úo funcionou? . . . . . . . . . . . . . . . . . . . . 9
+i
+
+=== PAGINA 3 ===
+8.3 Por que mais ├írvores ajudaram at├⌐ certo ponto? . . . . . . . . . . . . . . . . . . 9
+8.4 Por que o ensemble de folds piorou? . . . . . . . . . . . . . . . . . . . . . . . . . 9
+9 Conclus├úo 9
+10 Refer├¬ncias 10
+Lista de Figuras
+1Vari├íveis mais importantes segundo a m├⌐dia dos ranks de ExtraTrees, informa├º├úo
+m├║tua e╧ç2. . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+2Compara├º├úo da acur├ícia dos quatro modelos em valida├º├úo cruzada. As barras de
+erro representam ┬▒1desvio-padr├úo entre os 5 folds. A ampla sobreposi├º├úo indica
+que as diferen├ºasn├úos├úo estatisticamente distingu├¡veis. . . . . . . . . . . . . . . 5
+3Acur├ícia em fun├º├úo do n├║mero de ├írvores. A curva azul ├⌐ a valida├º├úo interna (CV,
+com banda de ┬▒1desvio-padr├úo) e a laranja ├⌐ o score p├║blico do Kaggle. Ambas
+atingem o m├íximo na regi├úo de259ΓÇô260├írvores, e ambas decaem acima disso ΓÇö
+concord├óncia que sustenta a escolha de260como modelo final. . . . . . . . . . . 8
+ii
+
+=== PAGINA 4 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+Resumo
+Este trabalho aborda a classifica├º├úo bin├íria de solicitantes de cr├⌐dito como bons pagadores ou
+inadimplentes, utilizandoumconjuntode20 .000registroscom41atributos. Foramtestadosquatro
+algoritmosΓÇöRegress├úoLog├¡stica, RandomForest, XGBoosteLightGBMΓÇösobvalida├º├úocruzada
+estratificada com 5 folds. Ap├│s compara├º├úo entre diferentes estrat├⌐gias de pr├⌐-processamento e
+ajuste de hiperpar├ómetros, o modelo LightGBM, treinado sobre1 .853features com 260 ├írvores
+de boosting e threshold de0 ,50com random_state fixado em 42, alcan├ºou a melhor acur├ícia de
+61,36 %no placar p├║blico do Kaggle.
+1 Objetivo do Projeto
+O objetivo deste trabalho ├⌐ construir um classificador bin├írio capaz de prever, a partir de dados
+de uma solicita├º├úo de cr├⌐dito, se o solicitante ser├í um bom pagador ou ficar├í inadimplente. A
+m├⌐trica de avalia├º├úo da competi├º├úo ├⌐ aacur├íciaΓÇö a porcentagem de previs├╡es corretas sobre o
+total.
+2 Descri├º├úo dos Dados
+O conjunto de dados fornecido pela disciplina est├í dividido em duas partes:
+Arquivo Registros Colunas Uso
+conjunto_de_treinamento.csv20.00042 (41 atributos + 1 alvo) Treino e valida├º├úo
+conjunto_de_teste.csv5.00041 (sem alvo) Gera├º├úo de previ-
+s├╡es para o Kaggle
+2.1 Vari├ível alvo
+A vari├ível inadimplente ├⌐ bin├íria (0 = bom pagador, 1 = inadimplente) e est├í perfeitamente
+balanceada:10 .000registros de cada classe. Um classificador que sempre previsse a mesma classe
+teria acur├ícia de50 %.
+2.2 Tipos de vari├íveis
+Tipo Quantidade Exemplos
+Categ├│ricas codificadas 15 profiss├úo, ocupa├º├úo, estado civil, dia de vencimento
+Categ├│ricas bin├írias 16 possui telefone residencial, possui cart├úo Visa, v├¡n-
+culo formal
+Num├⌐ricas quantitativas 9 idade, renda mensal, meses na resid├¬ncia, patrim├┤-
+nio pessoal
+Identificador 1id_solicitante(n├úo preditivo)
+1
+
+=== PAGINA 5 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+2.3 Valores faltantes
+Seis colunas apresentam dados ausentes, com destaque para vari├íveis relacionadas ao companheiro
+do solicitante:
+Vari├ível % de faltantes
+grau_instrucao_companheiro64,3 %
+profissao_companheiro57,6 %
+profissao15,5 %
+ocupacao14,9 %
+meses_na_residencia7,3 %
+tipo_residencia2,7 %
+O elevado percentual de aus├¬ncia nas vari├íveis do companheiro (64 ,3 %e57 ,6 %) muito
+provavelmente codifica a inexist├¬ncia de companheiro (solicitantes solteiros), de modo que o
+padr├úo de aus├¬nciacarrega sinal ΓÇö raz├úo pela qual optou-se por tratar a aus├¬ncia como categoria
+expl├¡cita em vez de descart├í-la.
+2.4 Vari├íveis constantes
+grau_instrucao epossui_telefone_celular apresentaram um ├║nico valor em todo o conjunto
+de treinamento, n├úo carregando informa├º├úo discriminativa.
+2.5 Valores extremos
+Vari├íveis financeiras apresentaram outliers significativos: renda_mensal_regular tem mediana
+de500 R$e m├íximo de959 .000R$;valor_patrimonio_pessoal tem mediana de0 R$e m├íximo
+de6.000.000 R$. Esses valores extremos foram sinalizados mas n├úo removidos.
+3 Metodologia
+3.1 Estrat├⌐gia geral
+O projeto foi organizado em fases sequenciais: pr├⌐-processamento dos dados, sele├º├úo de atributos,
+modelagem com compara├º├úo de algoritmos, e otimiza├º├úo do modelo vencedor. O conjunto de
+teste (5 .000amostras) foi mantido isolado at├⌐ a etapa final de submiss├úo, para evitar qualquer
+influ├¬ncia nas decis├╡es de modelagem.
+3.2 Duas m├⌐tricas de valida├º├úo distintas
+Ao longo do relat├│rio, duas grandezas diferentes s├úo reportadas en├úo devem ser confundidas:
+ΓÇóValida├º├úo interna (CV)ΓÇö acur├ícia m├⌐dia da valida├º├úo cruzada estratificada de 5 folds
+sobre os20 .000registros de treino. ├ë a m├⌐trica usada paratomar decis├╡esde modelagem,
+pois n├úo depende do envio ao Kaggle.
+2
+
+=== PAGINA 6 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+ΓÇóScore p├║blico (Kaggle)ΓÇö acur├ícia calculada pela plataforma sobre a fra├º├úo p├║blica do
+conjunto de teste. Serve comoestimativa externade generaliza├º├úo, mas ├⌐ sujeita ao ru├¡do
+de uma amostra menor e ao risco de sobreajuste ao leaderboard.
+Na valida├º├úo cruzada, os20 .000registros s├úo divididos em 5 partes iguais; em cada rodada, 4
+partes treinam o modelo e a parte restante ├⌐ usada como teste. Cada registro ├⌐ testado exatamente
+uma vez, e a acur├ícia reportada ├⌐ a m├⌐dia das 5 rodadas. Todo o pr├⌐-processamento ├⌐ reajustado
+apenas nos dados de treino de cada fold, evitando vazamento.
+3.3 Compara├º├úo de modelos
+ΓÇóRegress├úo Log├¡sticaΓÇö classificador linear utilizado como baseline de refer├¬ncia. Sua
+principal fun├º├úo foi estabelecer um piso de acur├ícia: qualquer modelo mais complexo que
+n├úo supere esse piso n├úo justifica sua complexidade adicional.
+ΓÇóRandom ForestΓÇö ensemble de ├írvores de decis├úo independentes, combinadas por vota├º├úo
+majorit├íria.
+ΓÇóXGBoostΓÇö algoritmo de gradient boosting que constr├│i ├írvores sequencialmente, em que
+cada nova ├írvore aprende a corrigir os erros das anteriores.
+ΓÇóLightGBMΓÇö variante do gradient boosting otimizada para velocidade e efici├¬ncia, com a
+mesma l├│gica sequencial do XGBoost.
+4 Pr├⌐-processamento dos Dados
+4.1 Objetivo
+Transformar a base bruta em uma matriz num├⌐rica pronta para modelagem, utilizando um
+Pipeline do scikit-learn como fonte da verdade, garantindo reprodutibilidade e evitando vaza-
+mento de dados.
+4.2 Decis├╡es de pr├⌐-processamento
+Aspecto Decis├úo Justificativa
+Codifica├º├úo categ├│rica One-Hot Encoding com
+handle_unknown="ignore"Evita ordem falsa entre categorias e
+aceita categorias novas no teste
+Faltantes num├⌐ricos Imputa├º├úo pela mediana Robusta contra outliers
+Faltantes categ├│ricos CategoriaMISSING Preserva o sinal de aus├¬ncia como
+poss├¡vel informa├º├úo
+Escala num├⌐ricaRobustScaler Mais est├ível na presen├ºa de valores
+extremos
+Outliers Flags acima do percentil 99 + trans-
+forma├º├úolog1pPreserva a informa├º├úo sem distorcer o
+modelo
+Colunas removidasid_solicitante ,grau_instrucao ,
+possui_telefone_celularIdentificador e vari├íveis constantes
+3
+
+=== PAGINA 7 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+4.3 Resultado
+A matriz processada final ficou com20 .000linhas ├ù1.853features, armazenada em formato
+esparso (.npz), adequado para a alta dimensionalidade gerada pelo One-Hot Encoding.
+5 Sele├º├úo de Atributos
+5.1 Objetivo
+Analisar quais atributos contribuem para a previs├úo de inadimpl├¬ncia, identificar redund├óncias e
+preparar conjuntos candidatos de features para a modelagem.
+5.2 Metodologia de sele├º├úo
+A an├ílise combinou tr├¬s abordagens complementares:
+1.Import├óncia por ├írvores (ExtraTrees)ΓÇö mede quanto cada feature contribui para as
+decis├╡es do modelo.
+2.Informa├º├úo m├║tuaΓÇö mede depend├¬ncia estat├¡stica n├úo-linear entre cada feature e o alvo.
+3.Teste qui-quadrado ( ╧ç2)ΓÇö mede associa├º├úo estat├¡stica entre features categ├│ricas e o
+alvo.
+5.3 Vari├íveis mais importantes
+A Figura 1 apresenta as oito vari├íveis mais relevantes, agregadas por vari├ível original e ordenadas
+pelo rank m├⌐dio das tr├¬s abordagens (quanto menor o rank, mais importante).
+0 2 4 6 8
+Rank m├⌐dio (menor = mais importante)faixa\_etaria
+dia\_vencimento
+possui\_telefone\_residencial
+estado\_civil
+ocupacao
+regiao\_reside
+profissao
+renda\_mensal\_regular1,67
+3,67
+4,33
+6,00
+6,00
+6,67
+8,00
+8,33Vari├íveis mais importantes (agregado de ExtraTrees, IM e 2)
+Figura 1:Vari├íveis mais importantes segundo a m├⌐dia dos ranks de ExtraTrees, informa├º├úo m├║tua e ╧ç2.
+4
+
+=== PAGINA 8 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+Chama aten├º├úo a presen├ºa de dia_vencimento epossui_telefone_residencial entre as
+vari├íveis mais discriminativas ΓÇö atributos aparentemente operacionais e n├úo socioecon├┤micos.
+5.4 Features raras
+44features foram identificadas como muito raras (presen├ºa <1 %das amostras), concentradas
+principalmente em categorias de profiss├úo, cart├╡es de cr├⌐dito e tipos de resid├¬ncia.
+6 Modelagem e Treinamento
+6.1 Objetivo
+Comparar o desempenho dos quatro algoritmos e identificar o mais promissor para refinamento.
+6.2 Resultados comparativos
+Os quatro modelos foram avaliados nas mesmas condi├º├╡es: valida├º├úo cruzada estratificada com
+5 folds sobre a base de1 .853features. A Figura 2 mostra a acur├ícia m├⌐dia com as respectivas
+barras de erro (um desvio-padr├úo entre folds).
+Regress├úo
+Log├¡sticaRandom
+ForestXGBoost LightGBM50.052.054.056.058.060.062.0Acur├ícia m├⌐dia em CV (\%)
+baseline trivial (50\%)60.52\%
+59.73\%60.27\% 60.40\%Compara├º├úo dos quatro modelos (5-fold CV , barras = ┬▒1 desvio)
+Figura 2:Compara├º├úo da acur├ícia dos quatro modelos em valida├º├úo cruzada. As barras de erro
+representam ┬▒1desvio-padr├úo entre os 5 folds. A ampla sobreposi├º├úo indica que as diferen├ºasn├úos├úo
+estatisticamente distingu├¡veis.
+Os quatro modelos ficaram numa faixa estreita de acur├ícia (59 ,7 %a60,5 %), com os dois
+algoritmos de boosting (XGBoost e LightGBM) ligeiramente ├á frente. Como evidencia a sobrepo-
+si├º├úo das barras de erro na Figura 2, essa diferen├ºa est├í dentro do ru├¡do da valida├º├úo interna. Nas
+submiss├╡es ao Kaggle, por├⌐m, o LightGBM superou consistentemente os demais, e foi o modelo
+levado adiante.
+5
+
+=== PAGINA 9 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+O fato de o baseline linear (regress├úo log├¡stica) alcan├ºar acur├ícia muito pr├│xima dos modelos
+n├úo-lineares indica que o sinal discriminativo nos dados ├⌐ predominantemente capt├ível de forma
+simples ΓÇö os modelos de ├írvore n├úo encontraram intera├º├╡es complexas que a regress├úo n├úo veja.
+6.3 Tentativa defeature engineering(Fase 2.2)
+Ap├│s os primeiros resultados, exploramos uma varia├º├úo do pr├⌐-processamento focada em per-
+formance, adicionando 26 vari├íveis engenheiradas: raz├╡es financeiras (renda por dependente,
+patrim├┤nio sobre renda), scores de contato, flags de estabilidade geogr├ífica e faixas de idade,
+totalizando1 .900features. A hip├│tese era que essas vari├íveis derivadas capturariam padr├╡es
+adicionais n├úo presentes nas features originais.
+Modelo Base Acur├ícia CV Score Kaggle
+LightGBM Original (1.853features)60,40 %60,64%
+LightGBM Engenheirada (1.900features)60,48 %Γê╝58,00 %
+A base engenheirada apresentou acur├ícia interna marginalmente superior, por├⌐mquando
+submetida ao Kaggle, o resultado foi significativamente pior:58 ,00 %contra60 ,64 %
+da base original. Isso indica que as features engenheiradas, embora parecessem promissoras
+na valida├º├úo interna, n├úo generalizaram para dados novos ΓÇö possivelmente por overfitting ├ás
+particularidades do conjunto de treinamento. Este ├⌐ o exemplo mais claro no projeto dediverg├¬ncia
+entre a valida├º├úo interna e o score p├║blico: melhora numa, piora na outra. Com base nesse
+resultado, a base original de1.853features foi mantida como definitiva.
+7 Otimiza├º├úo e Submiss├úo
+7.1 Objetivo
+Extrair o m├íximo de performance do modelo vencedor (LightGBM com base original) por meio
+de ajustes sistem├íticos de hiperpar├ómetros.
+7.2 Escolha do modelo e base
+As submiss├╡es iniciais confirmaram que:
+Trilha Modelo Score Kaggle
+Base original LightGBM (171 ├írvores)60,64%
+Base original XGBoost59,20 %
+Base engenheirada LightGBMΓê╝58,00 %
+O LightGBM sobre a base original foi selecionado como modelo principal.
+6
+
+=== PAGINA 10 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+7.3 Ajuste de threshold
+Varia├º├╡es no threshold de classifica├º├úo n├úo trouxeram ganho:
+Threshold Score
+0.5060,64%
+0.4960,60 %
+0.5160,40 %
+0.5260,08 %
+O threshold padr├úo de0,50j├í estava no ponto ├│timo.
+7.4 Ensemble de folds
+Testamos a m├⌐dia de probabilidades de 5 modelos treinados em folds diferentes:
+Estrat├⌐gia Score
+Modelo ├║nico (20.000dados)60,64%
+Ensemble de 5 folds60,20 %
+O ensemble piorou o resultado. A explica├º├úo mais prov├ível ├⌐ que cada modelo treinou
+com apenas80 %dos dados, e neste dataset a perda de informa├º├úo foi maior que o ganho de
+estabilidade.
+7.5 Ajuste den_estimatorsΓÇö o refinamento que funcionou
+Mantivemos todos os hiperpar├ómetros fixos e variamos apenas o n├║mero de ├írvores do LightGBM.
+Al├⌐m do score p├║blico do Kaggle, todas as configura├º├╡es foram avaliadas por valida├º├úo cruzada
+estratificada de 5 folds, usando os mesmos folds ( random_state=42 ) e threshold de0 ,50. A
+Figura 3 sobrep├╡e as duas curvas, permitindo verificar se valida├º├úo interna e Kaggle concordam.
+7
+
+=== PAGINA 11 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+125 150 175 200 225 250 275 300
+N├║mero de ├írvores (n\_estimators)59.860.060.260.560.861.061.261.561.8Acur├ícia (\%)
+modelo final
+(260 ├írvores)Acur├ícia vs. n├║mero de ├írvores: valida├º├úo interna e Kaggle
+Desvio-padr├úo CV (┬▒1 dp)
+Acur├ícia CV (valida├º├úo interna)
+Score Kaggle (p├║blico)
+Figura 3:Acur├ícia em fun├º├úo do n├║mero de ├írvores. A curva azul ├⌐ a valida├º├úo interna (CV, com banda
+de┬▒1desvio-padr├úo) e a laranja ├⌐ o score p├║blico do Kaggle. Ambas atingem o m├íximo na regi├úo de
+259ΓÇô260├írvores, e ambas decaem acima disso ΓÇö concord├óncia que sustenta a escolha de260como modelo
+final.
+O modelo com 260 ├írvores obteve a maior acur├ícia m├⌐dia na valida├º├úo interna (60 ,63 %)
+eo melhor resultado no Kaggle (61 ,36 %). Em rela├º├úo ├ás 171 ├írvores originais, o ganho foi
+de+0,18 ponto percentual na valida├º├úo cruzadae de+0,72 ponto percentual no
+Kaggle. ├ë importante notar que as m├⌐dias internas ficaram muito pr├│ximas e seus desvios se
+sobrep├╡em amplamente: a valida├º├úo cruzada favorecelevemente260 ├írvores, mas n├úo demonstra
+superioridade estatisticamente clara. O que d├í confian├ºa ├á escolha ├⌐ aconcord├óncia de dire├º├úo
+entre as duas curvas ΓÇö ambas sobem at├⌐259 a260e decaem depois. A queda observada em
+265 e 300 ├írvores ├⌐ compat├¡vel com o in├¡cio de overfitting, embora a variabilidade entre folds
+recomende cautela nessa interpreta├º├úo.
+7.6 Threshold fino no modelo final
+Ap├│s fixar n_estimators=260 , testamos thresholds finos que confirmaram0 ,50como ponto ├│timo:
+Threshold Score
+0.49561,12 %
+0.50061,36%
+0.50561,32 %
+8
+
+=== PAGINA 12 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+8 Discuss├úo dos Resultados
+8.1 Por que o LightGBM superou os demais?
+Os quatro modelos testados em valida├º├úo cruzada apresentaram acur├ícias pr├│ximas (59 % a
+61 %), mas o LightGBM generalizou melhor nas submiss├╡es ao Kaggle, superando inclusive o
+XGBoost ΓÇö que usa a mesma fam├¡lia de algoritmo. Uma poss├¡vel explica├º├úo ├⌐ que as diferen├ºas de
+implementa├º├úo entre LightGBM e XGBoost (como a forma de construir as ├írvores e as heur├¡sticas
+de regulariza├º├úo) favoreceram o LightGBM para este dataset espec├¡fico. Em rela├º├úo ao Random
+Forest e ├á Regress├úo Log├¡stica, o gradient boosting captura padr├╡es sutis que um ensemble
+independente ou um modelo linear n├úo alcan├ºam. Essa vantagem, embora pequena em valida├º├úo
+interna, se amplificou em dados novos.
+8.2 Por que afeature engineeringn├úo funcionou?
+A base engenheirada (Fase 2.2) trouxe um resultado paradoxal: m├⌐tricas internas ligeiramente
+superiores, mas performance real inferior no Kaggle. Isso sugere que as vari├íveis derivadas ΓÇö
+raz├╡es financeiras, scores de contato, flags de estabilidade ΓÇö se ajustaram a particularidades
+do conjunto de treinamento que n├úo se repetiram no conjunto de teste. Em outras palavras, as
+features engenheiradas introduziram overfitting. A li├º├úo ├⌐ que mais features n├úo garantem melhor
+generaliza├º├úo.
+8.3 Por que mais ├írvores ajudaram at├⌐ certo ponto?
+O n├║mero original de ├írvores (171) foi definido a partir das itera├º├╡es escolhidas por early stopping
+nos folds de valida├º├úo. Por├⌐m, o modelo final ├⌐ treinado nos20 .000registros completos, sem
+separar um fold de valida├º├úo, e pode sustentar mais itera├º├╡es. A compara├º├úo direta dos valores
+fixos por valida├º├úo cruzada encontrou a maior m├⌐dia com 260 ├írvores (60 ,63 %, contra60 ,45 %
+com 171), em concord├óncia com o melhor score do Kaggle. Como essa diferen├ºa interna ├⌐ pequena
+perante a varia├º├úo entre folds, a evid├¬ncia sugere ΓÇö mas n├úo prova isoladamente ΓÇö uma vantagem
+da regi├úo de259 a260├írvores. A piora em 265 e 300 ├írvores ├⌐ compat├¡vel com o in├¡cio de
+overfitting.
+8.4 Por que o ensemble de folds piorou?
+A estrat├⌐gia de ensemble por m├⌐dia de probabilidades de 5 modelos tipicamente reduz vari├óncia
+e melhora a robustez. No entanto, cada modelo treinou com apenas16 .000dos20 .000dados
+dispon├¡veis. Neste dataset, a perda de20 %dos dados de treino custou mais do que o ganho de
+estabilidade. O modelo ├║nico treinado em todos os20.000registros provou ser superior.
+9 Conclus├úo
+O modelo final utilizado na competi├º├úo ├⌐ umLightGBMcom a seguinte configura├º├úo:
+9
+
+=== PAGINA 13 ===
+Classificador de Aprova├º├úo de Cr├⌐dito Introdu├º├úo ao Aprendizado de M├íquina
+Par├ómetro Valor
+Algoritmo LightGBM (LGBMClassifier)
+Pr├⌐-processamento One-Hot Encoding, imputa├º├úo por media-
+na/MISSING,RobustScaler
+N├║mero de features1.853
+n_estimators260
+learning_rate0.05
+num_leaves31
+min_child_samples40
+subsample0.85
+colsample_bytree0.85
+reg_alpha0.1
+reg_lambda1.0
+Threshold de classifica├º├úo 0.50
+random_state42
+Dados de treino20.000registros (conjunto completo)
+Melhor score Kaggle61,36%
+A estrat├⌐gia que se mostrou mais efetiva foi manter o pr├⌐-processamento simples (sem feature
+engineering adicional), utilizar o algoritmo LightGBM, e ajustar o n├║mero de ├írvores al├⌐m do
+ponto indicado pelo early stopping da valida├º├úo cruzada. Tentativas de refinar threshold, construir
+ensembles de folds ou adicionar features engenheiradas n├úo trouxeram ganho no placar real.
+10 Refer├¬ncias
+ΓÇóScikit-learn:https://scikit-learn.org/
+ΓÇóLightGBM:https://lightgbm.readthedocs.io/
+ΓÇóXGBoost:https://xgboost.readthedocs.io/
+ΓÇóPandas:https://pandas.pydata.org/
+10
+

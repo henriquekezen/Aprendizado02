@@ -1,0 +1,22 @@
+{
+  "preco_generalista_invertido": {
+    "centro": -240907.54443433654,
+    "escala": 87255.89499436005
+  },
+  "classificador_barato": {
+    "centro": 0.9119722038608358,
+    "escala": 0.22204667447138987
+  },
+  "classificador_barato_utilidade": {
+    "centro": 0.8877529154409524,
+    "escala": 0.20930330300964212
+  },
+  "classificador_utilidade": {
+    "centro": 0.5553942650942953,
+    "escala": 0.10369869519792907
+  },
+  "regressor_delta": {
+    "centro": 0.035162489238797674,
+    "escala": 0.030679486258507253
+  }
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "iterations": 1000,
+    "learning_rate": 0.03,
+    "depth": 6,
+    "l2_leaf_reg": 5.0,
+    "random_strength": 0.25,
+    "bootstrap_type": "Bayesian",
+    "bagging_temperature": 1.0,
+    "boosting_type": "Ordered",
+    "nome": "log_a200_d6_rs025",
+    "target": "log",
+    "alpha": 2.0
+  },
+  {
+    "iterations": 1000,
+    "learning_rate": 0.03,
+    "depth": 6,
+    "l2_leaf_reg": 5.0,
+    "random_strength": 0.5,
+    "bootstrap_type": "Bayesian",
+    "bagging_temperature": 1.0,
+    "boosting_type": "Ordered",
+    "nome": "log_a200_d6_rs050",
+    "target": "log",
+    "alpha": 2.0
+  },
+  {
+    "iterations": 800,
+    "learning_rate": 0.03,
+    "depth": 7,
+    "l2_leaf_reg": 5.0,
+    "random_strength": 0.0,
+    "bootstrap_type": "Bayesian",
+    "bagging_temperature": 1.0,
+    "boosting_type": "Ordered",
+    "nome": "log_a200_d7_i800_rs0",
+    "target": "log",
+    "alpha": 2.0
+  }
+]

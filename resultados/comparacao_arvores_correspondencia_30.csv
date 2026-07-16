@@ -1,0 +1,5 @@
+nome,n_estimators,learning_rate,rmspe_kfold,desvio_kfold,rmspe_bloco_id,arquivo
+600_lr004,600,0.04,0.23237093004624101,0.004590019234905016,0.21850440567719334,C:\Users\hique\..2APRENDIZADO\src\..\submissions\submission_arvores_600_lr004_correspondencia_30.csv
+1600_lr0015,1600,0.015,0.23292560146134633,0.004917690431205491,0.21906869895465578,C:\Users\hique\..2APRENDIZADO\src\..\submissions\submission_arvores_1600_lr0015_correspondencia_30.csv
+400_lr006,400,0.06,0.23295292468423648,0.00560836963395827,0.2192873915262883,C:\Users\hique\..2APRENDIZADO\src\..\submissions\submission_arvores_400_lr006_correspondencia_30.csv
+1200_lr002,1200,0.02,0.2331767179148449,0.004871022738345845,0.22019394299327577,C:\Users\hique\..2APRENDIZADO\src\..\submissions\submission_arvores_1200_lr002_correspondencia_30.csv

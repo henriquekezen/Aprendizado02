@@ -1,0 +1,12 @@
+{
+  "alvo_exato": {
+    "intercepto": 0.07500000000000007,
+    "inclinacao": 0.45,
+    "rmspe": 0.21317735885357705
+  },
+  "alvo_projetado_01": {
+    "intercepto": -0.45,
+    "inclinacao": 1.5,
+    "rmspe": 0.21276359723206306
+  }
+}

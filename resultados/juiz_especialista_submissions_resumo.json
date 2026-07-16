@@ -1,0 +1,94 @@
+{
+  "juiz": "classificador_utilidade",
+  "centro_sigmoide": 0.5553942650942953,
+  "escala_sigmoide": 0.10369869519792907,
+  "fator_especialista": 0.914489,
+  "lambdas": [
+    0.4,
+    0.7,
+    1.0
+  ],
+  "arquivos": [
+    "submission_juiz_utilidade_lambda040.csv",
+    "submission_juiz_utilidade_lambda070.csv",
+    "submission_juiz_utilidade_lambda100.csv"
+  ],
+  "peso_juiz_oof_media": 0.17313693845896086,
+  "peso_juiz_teste_media": 0.16972134268852523,
+  "peso_juiz_teste_mediana": 0.1282060753826107,
+  "peso_juiz_teste_p90": 0.3658390605798934,
+  "tempo_especialista_final_segundos": 33.89337340000202,
+  "tempo_juiz_final_segundos": 19.808617100003175,
+  "oof": [
+    {
+      "intensidade": 0.0,
+      "rmspe_oof": 0.2140663320251017,
+      "peso_especialista_medio": 0.0,
+      "peso_especialista_p90": 0.0
+    },
+    {
+      "intensidade": 0.4,
+      "rmspe_oof": 0.21350652355035316,
+      "peso_especialista_medio": 0.06925477538358435,
+      "peso_especialista_p90": 0.16202009760373856
+    },
+    {
+      "intensidade": 0.7,
+      "rmspe_oof": 0.21329391778287374,
+      "peso_especialista_medio": 0.12119585692127259,
+      "peso_especialista_p90": 0.28353517080654245
+    },
+    {
+      "intensidade": 1.0,
+      "rmspe_oof": 0.21325958681135695,
+      "peso_especialista_medio": 0.17313693845896086,
+      "peso_especialista_p90": 0.40505024400934636
+    }
+  ],
+  "holdout_id": [
+    {
+      "intensidade": 0.0,
+      "rmspe": 0.21174476947487933,
+      "rmspe_baratos_ate_355k": 0.22392113251460335,
+      "rmspe_caros_acima_355k": 0.20750296862429812,
+      "peso_medio_juiz": 0.17883484092510613,
+      "peso_mediano_juiz": 0.1131397196432629,
+      "tempo_arvores_segundos": 2.4367735000050743,
+      "tempo_especialista_segundos": 33.74906960000226,
+      "tempo_juiz_segundos": 20.19452459999593
+    },
+    {
+      "intensidade": 0.4,
+      "rmspe": 0.21078728999297347,
+      "rmspe_baratos_ate_355k": 0.21957210498115265,
+      "rmspe_caros_acima_355k": 0.2077591910811381,
+      "peso_medio_juiz": 0.17883484092510613,
+      "peso_mediano_juiz": 0.1131397196432629,
+      "tempo_arvores_segundos": 2.4367735000050743,
+      "tempo_especialista_segundos": 33.74906960000226,
+      "tempo_juiz_segundos": 20.19452459999593
+    },
+    {
+      "intensidade": 0.7,
+      "rmspe": 0.2103081345628668,
+      "rmspe_baratos_ate_355k": 0.21650554135183347,
+      "rmspe_caros_acima_355k": 0.20818925917317888,
+      "peso_medio_juiz": 0.17883484092510613,
+      "peso_mediano_juiz": 0.1131397196432629,
+      "tempo_arvores_segundos": 2.4367735000050743,
+      "tempo_especialista_segundos": 33.74906960000226,
+      "tempo_juiz_segundos": 20.19452459999593
+    },
+    {
+      "intensidade": 1.0,
+      "rmspe": 0.21003540999791256,
+      "rmspe_baratos_ate_355k": 0.21361434119805733,
+      "rmspe_caros_acima_355k": 0.20882189806148885,
+      "peso_medio_juiz": 0.17883484092510613,
+      "peso_mediano_juiz": 0.1131397196432629,
+      "tempo_arvores_segundos": 2.4367735000050743,
+      "tempo_especialista_segundos": 33.74906960000226,
+      "tempo_juiz_segundos": 20.19452459999593
+    }
+  ]
+}

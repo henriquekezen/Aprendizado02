@@ -1,0 +1,8 @@
+{
+  "variante_vencedora": "alvo_projetado_01",
+  "rmspe_crossfit": 0.21287300085342017,
+  "rmspe_holdout": 0.20953554154390305,
+  "criterio_crossfit_maximo": 0.213,
+  "referencia_holdout_juiz_binario": 0.21003540999791256,
+  "elegivel_para_submission": true
+}

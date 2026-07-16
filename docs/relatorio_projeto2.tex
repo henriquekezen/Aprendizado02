@@ -1,0 +1,682 @@
+% !TEX encoding = UTF-8
+\documentclass[12pt,a4paper]{article}
+
+% ── Codificação e idioma ──
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil]{babel}
+
+% ── Tipografia e layout ──
+\usepackage{lmodern}
+\usepackage[top=2.5cm, bottom=2.5cm, left=2.5cm, right=2.5cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+
+% ── Gráficos ──
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepgfplotslibrary{groupplots}
+\usepackage{tikz}
+
+% ── Tabelas ──
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{longtable}
+
+% ── Matemática ──
+\usepackage{amsmath}
+
+% ── Links e referências ──
+\usepackage[colorlinks=true, linkcolor=blue, urlcolor=blue, citecolor=blue]{hyperref}
+
+% ── Cabeçalhos ──
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small Preditor de Preços de Imóveis}
+\fancyhead[R]{\small Introdução ao Aprendizado de Máquina}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Código inline ──
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=none
+}
+
+% ══════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Capa ──
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+
+{\Large\bfseries Introdução ao Aprendizado de Máquina\par}
+\vspace{1.5cm}
+{\LARGE\bfseries Preditor de Preços de Imóveis\par}
+\vspace{1cm}
+{\large Projeto e implementação de um regressor de preços de imóveis\\
+com pipeline de pré-processamento, limpeza orientada por dados,\\
+comparação de modelos e arquitetura de roteamento\\
+entre generalista e especialista\par}
+\vspace{2cm}
+{\large Aluno: Henrique Kezen V. H. Leite\par}
+\vspace{0.5cm}
+{Repositório:\par}
+\vspace{0.5cm}
+{Ambiente técnico: Python 3.14 --- Pandas, NumPy, Scikit-learn,\\
+LightGBM, XGBoost, CatBoost, Matplotlib, Seaborn\par}
+\vfill
+{Rio de Janeiro, julho de 2026\par}
+\end{titlepage}
+
+% ── Sumário ──
+\tableofcontents
+\newpage
+
+% ══════════════════════════════════════════════════════════════
+\section*{Resumo}
+\addcontentsline{toc}{section}{Resumo}
+
+Este trabalho aborda a previsão de preços de imóveis a partir de um conjunto de 4.683 registros com 20 atributos. Foram testados Regressão Linear, XGBoost, LightGBM e CatBoost, todos treinados com alvo em \lstinline{log1p(preco)} --- cujas previsões são convertidas de volta para reais com \lstinline{expm1} --- variáveis categóricas nativas e \lstinline{sample_weight = 1/preco^1,5}. O modelo final é uma arquitetura de roteamento que combina um generalista (blend de 60\% CatBoost, 20\% XGBoost e 20\% LightGBM) com um especialista CatBoost para imóveis baratos (\lstinline{sample_weight = 1/preco²}), selecionados por um juiz contínuo.
+
+% ══════════════════════════════════════════════════════════════
+\section{Objetivo do Projeto}
+
+O objetivo deste trabalho é construir um modelo de regressão capaz de prever o preço de venda de imóveis a partir de suas características físicas, localização e diferenciais de infraestrutura. A métrica de avaliação da competição é o \textbf{RMSPE} (\textit{Root Mean Squared Percentage Error}) --- a raiz da média dos erros percentuais ao quadrado. O RMSPE penaliza proporcionalmente ao preço real: um erro de R\$\,50 mil em um imóvel de R\$\,100 mil é muito mais grave que o mesmo erro em um imóvel de R\$\,1 milhão.
+
+% ══════════════════════════════════════════════════════════════
+\section{Descrição dos Dados}
+
+O conjunto de dados fornecido pela disciplina está dividido em duas partes:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrcl}
+\toprule
+\textbf{Arquivo} & \textbf{Registros} & \textbf{Colunas} & \textbf{Uso} \\
+\midrule
+\texttt{conjunto\_de\_treinamento.csv} & 4.683 & 21 & Treino e validação \\
+\texttt{conjunto\_de\_teste.csv}       & 2.001 & 20 & Previsões para o Kaggle \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Variável alvo}
+
+A variável \texttt{preco} é contínua e apresenta distribuição fortemente assimétrica à direita: a média (R\$\,927.705) é quase o dobro da mediana (R\$\,515.000), com mínimo de R\$\,750 e máximo de R\$\,630 milhões. Essa assimetria motivou o uso da transformação logarítmica \lstinline{log1p(preco)} como alvo de treino.
+
+\subsection{Tipos de variáveis}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrl}
+\toprule
+\textbf{Tipo} & \textbf{Qtd} & \textbf{Exemplos} \\
+\midrule
+Categóricas nominais     & 4  & \texttt{tipo}, \texttt{bairro}, \texttt{tipo\_vendedor}, \texttt{diferenciais} \\
+Numéricas quantitativas   & 5  & \texttt{quartos}, \texttt{suites}, \texttt{vagas}, \texttt{area\_util}, \texttt{area\_extra} \\
+Binárias (diferenciais)   & 10 & \texttt{churrasqueira}, \texttt{piscina}, \texttt{vista\_mar}, \texttt{sauna} \\
+Identificador             & 1  & \texttt{Id} (não preditivo) \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A coluna \texttt{tipo} é altamente desbalanceada: 4.501 apartamentos contra apenas 177 casas, 3 lofts e 2 quitinetes. A coluna \texttt{bairro} possui 66 categorias distintas, das quais 30 possuem menos de 10 imóveis.
+
+\subsection{Valores faltantes}
+
+Nenhuma coluna apresentou valores nulos, o que simplificou o pré-processamento.
+
+\subsection{Valores extremos}
+
+Variáveis numéricas apresentaram outliers significativos que exigiram análise caso a caso:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrrl}
+\toprule
+\textbf{Variável} & \textbf{Mediana} & \textbf{Máximo} & \textbf{Observação} \\
+\midrule
+\texttt{preco}       & R\$\,515.000 & R\$\,630.000.000 & Provável erro de escala \\
+\texttt{area\_util}  & $\sim$100\,m² & 2.045\,m²        & Casas decimais perdidas \\
+\texttt{area\_extra} & 0\,m²         & 17.450\,m²       & Provável erro de escala \\
+\texttt{vagas}       & 2             & 30                & Caso isolado \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+% ══════════════════════════════════════════════════════════════
+\section{Metodologia}
+
+\subsection{Estratégia geral}
+
+O projeto foi organizado em fases: pré-processamento e auditoria dos dados, modelagem com comparação de algoritmos, otimização de hiperparâmetros, construção de um modelo especialista para imóveis baratos e, por fim, arquitetura de roteamento com juiz. O conjunto de teste foi mantido isolado até a etapa final de submissão.
+
+\subsection{Métricas de validação}
+
+Ao longo do relatório, três grandezas diferentes são reportadas:
+
+\begin{itemize}
+  \item \textbf{Validação interna (KFold)} --- RMSPE médio da validação cruzada de 5 folds sobre os dados de treino, com \lstinline{shuffle=True} e \lstinline{random_state=42}. É a métrica usada para tomar decisões de modelagem.
+  \item \textbf{Holdout por blocos de ID} --- RMSPE calculado sobre os 20\% menores IDs do treino, simulando a direção treino$\to$teste observada na competição (IDs de teste vão de 0 a $\sim$1.999, IDs de treino de $\sim$2.000 a $\sim$6.682). Esse holdout complementa o KFold porque a separação do Kaggle não é aleatória.
+  \item \textbf{Score público (Kaggle)} --- RMSPE calculado pela plataforma sobre a fração pública do conjunto de teste. Serve como estimativa externa de generalização.
+\end{itemize}
+
+\subsection{Comparação de modelos}
+
+\begin{itemize}
+  \item \textbf{Regressão Linear} --- baseline de referência, estabelecendo um piso de desempenho.
+  \item \textbf{XGBoost} --- gradient boosting com crescimento por profundidade.
+  \item \textbf{LightGBM} --- gradient boosting com crescimento por folha, usando \texttt{bairro} como categoria nativa.
+  \item \textbf{CatBoost} --- gradient boosting com ordered boosting e tratamento nativo de todas as categorias, sem necessidade de one-hot encoding.
+\end{itemize}
+
+\subsection{Métrica RMSPE}
+
+\begin{equation}
+\text{RMSPE} = \sqrt{\frac{1}{n}\sum_{i=1}^{n}\left(\frac{y_i - \hat{y}_i}{y_i}\right)^2}
+\end{equation}
+
+Como os erros são divididos pelo preço real, imóveis baratos com o mesmo erro absoluto produzem erro percentual muito maior. Essa propriedade motivou o uso de sample weights ao longo do projeto.
+
+% ══════════════════════════════════════════════════════════════
+\section{Pré-processamento dos Dados}
+
+\subsection{Objetivo}
+
+Transformar a base bruta em uma matriz numérica pronta para modelagem, tratando outliers, criando features derivadas e codificando variáveis categóricas.
+
+\subsection{Auditoria e limpeza de outliers}
+
+A auditoria foi feita em duas fases. Primeiro, inspeção direta de preços e áreas extremas. Segundo, criação de \textbf{features de auditoria} que utilizam o preço --- como \lstinline{preco_m2 = preco / area_util} --- para identificar inconsistências menos óbvias. Essas features existem exclusivamente para análise exploratória e \textbf{não são entregues ao modelo}, já que o preço é justamente a variável que o modelo deve prever e, portanto, não está disponível no conjunto de teste. Os casos individuais foram comparados com a mediana de preço/m² do respectivo bairro.
+
+\subsubsection{Primeira limpeza e o erro de ser agressivo demais}
+
+Na primeira versão, 29 imóveis foram removidos: 6 casos de erro claro (preços absurdos, áreas impossíveis) e 23 casos cujo preço por metro quadrado destoava da mediana do bairro. Essa remoção parecia segura porque a validação cruzada aleatória (KFold) não piorava.
+
+Entretanto, ao submeter ao Kaggle, o resultado foi pior do que o esperado. A investigação revelou que \textbf{parte dos imóveis removidos possuía registros com features muito similares no conjunto de teste} --- ou seja, o teste continha registros praticamente iguais a esses casos que havíamos descartado. Sem esses exemplos no treino, o modelo não tinha como prever corretamente esses imóveis repetidos.
+
+Além disso, o KFold aleatório não capturava essa divergência porque a separação treino/teste no Kaggle não é aleatória: os IDs de teste são sistematicamente menores ($\sim$0 a $\sim$1.999) que os de treino ($\sim$2.000 a $\sim$6.682). Essa descoberta levou à adoção do \textbf{holdout por blocos de ID} como validação complementar.
+
+\subsubsection{Recuperação e correção conservadora}
+
+As 23 linhas foram então recuperadas. Ao invés de simplesmente recolocá-las sem tratamento, investigou-se a causa dos valores extremos. Descobriu-se que 21 delas eram apartamentos cuja \texttt{area\_util} tinha provável erro de casa decimal --- a regra \lstinline{area_util / quartos > 200} os identificava deterministicamente, sem nenhum outro apartamento do treino sendo selecionado. A correção consistiu em dividir \texttt{area\_util} por 10.
+
+Adicionalmente:
+
+\begin{itemize}
+  \item Dois preços foram corrigidos por divisão por 10 (IDs 2749 e 4316), com base na comparação com a mediana do bairro;
+  \item O número de vagas do ID 6383 foi corrigido de 30 para 3;
+  \item A área extra do ID 6654 foi corrigida dividindo por 100, tornando o registro plausível e permitindo sua reinclusão.
+\end{itemize}
+
+\subsubsection{Exclusões definitivas e resultado}
+
+Cinco imóveis permaneceram excluídos por não possuírem correção confiável:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{rl}
+\toprule
+\textbf{ID} & \textbf{Motivo da exclusão definitiva} \\
+\midrule
+5910 & Preço de R\$\,750 \\
+2405 & Preço de R\$\,630 milhões para 98\,m² \\
+4568 & Preço de R\$\,65 milhões para 36\,m² \\
+6004 & Preço de R\$\,340 milhões para 72\,m² \\
+6654 & 17.450\,m² de área extra \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+A mesma regra de \lstinline{area_util / quartos > 200} foi aplicada ao conjunto de teste, corrigindo 3 imóveis. No conjunto de teste, 433 dos 2.000 imóveis possuem combinação completa de features muito similar a pelo menos um do treino --- incluindo vários dos casos anteriormente removidos. Isso confirmou que a remoção agressiva inicial prejudicava diretamente as previsões desses imóveis repetidos.
+
+A base final ficou com \textbf{4.678 imóveis} para treino.
+
+\subsection{Transformação do alvo}
+
+O preço foi transformado com \lstinline{np.log1p(preco)} para o treinamento: o modelo aprende a prever nessa escala comprimida. Depois da previsão, o valor é convertido de volta para reais com \lstinline{np.expm1}, recuperando a escala original do preço antes de qualquer avaliação ou submissão. Essa transformação é especialmente eficaz para a métrica RMSPE porque converte divisão em subtração: minimizar o MSE no espaço log equivale aproximadamente a minimizar erros proporcionais.
+
+\subsection{Variáveis categóricas}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Coluna} & \textbf{Tratamento} & \textbf{Justificativa} \\
+\midrule
+\texttt{tipo}           & One-hot (Loft + Quitinete $\to$ Outro) & Apenas 3 e 2 exemplos \\
+\texttt{bairro}         & Categoria nativa; $<$10 imóveis $\to$ ``Outros'' & 91 $\to$ 26 features \\
+\texttt{tipo\_vendedor} & Binário: Imobiliária=1 & Apenas duas categorias \\
+\texttt{diferenciais}   & Removida & Redundante com binárias \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Feature engineering}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Feature} & \textbf{Fórmula} & \textbf{Motivação} \\
+\midrule
+\texttt{area\_total}       & \texttt{area\_util + area\_extra} & Tamanho total \\
+\texttt{area\_por\_quarto} & \texttt{area\_util / quartos}     & Amplitude dos cômodos \\
+\texttt{n\_comodidades}    & Soma das 10 binárias              & Proxy de luxo \\
+\texttt{tem\_suite}        & 1 se \texttt{suites > 0}          & Diferencial de qualidade \\
+\texttt{vagas\_por\_quarto}& \texttt{vagas / quartos}           & Conveniência relativa \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resultado}
+
+A matriz processada final para o LightGBM/CatBoost categórico ficou com 4.678 linhas $\times$ 26 features, inteiramente numérica e pronta para modelagem.
+
+% ══════════════════════════════════════════════════════════════
+\section{Modelagem e Treinamento}
+
+\subsection{Objetivo}
+
+Comparar o desempenho dos modelos de regressão e identificar os mais promissores para refinamento e composição.
+
+\subsection{Resultados comparativos iniciais}
+
+Os modelos foram avaliados sobre os mesmos 931 imóveis de um holdout fixo (80/20, \lstinline{random_state=42}). A Figura~\ref{fig:comparacao_modelos} apresenta o RMSPE de cada modelo.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xbar,
+    width=12cm,
+    height=6cm,
+    xlabel={RMSPE (\%)},
+    symbolic y coords={
+        {LightGBM (log)},
+        {XGBoost (log)},
+        {Reg. Linear (log)},
+        {Reg. Linear (normal)}
+    },
+    ytick=data,
+    xmin=20, xmax=45,
+    nodes near coords,
+    nodes near coords align={horizontal},
+    nodes near coords style={font=\small, /pgf/number format/.cd, fixed, precision=2},
+    bar width=12pt,
+    enlarge y limits=0.25,
+    every axis plot/.append style={fill=blue!60},
+]
+\addplot coordinates {
+    (40.21,{Reg. Linear (normal)})
+    (30.13,{Reg. Linear (log)})
+    (25.26,{XGBoost (log)})
+    (25.05,{LightGBM (log)})
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Comparação do RMSPE dos quatro modelos no holdout fixo. A transformação logarítmica reduziu o erro em mais de 10 pontos percentuais na regressão linear. Os modelos de boosting superaram a regressão em log por aproximadamente 5 pontos.}
+\label{fig:comparacao_modelos}
+\end{figure}
+
+A transformação logarítmica reduziu o RMSPE em 10,08 pontos percentuais e eliminou as 10 previsões negativas da regressão normal. Os modelos de boosting superaram a regressão linear em aproximadamente 5 pontos, mas a diferença entre XGBoost e LightGBM foi de apenas 0,21 ponto --- dentro do ruído da amostra.
+
+\subsection{Impacto da representação do bairro}
+
+A mudança de one-hot encoding (91 features) para categoria nativa (26 features) trouxe ganho consistente, conforme ilustrado na Figura~\ref{fig:bairro_categorico}.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=9cm,
+    height=6cm,
+    ylabel={RMSPE médio (\%)},
+    symbolic x coords={One-hot (91 feat.), Categórico (26 feat.)},
+    xtick=data,
+    ymin=22.5, ymax=25,
+    nodes near coords,
+    nodes near coords style={font=\small, /pgf/number format/.cd, fixed, precision=2},
+    bar width=25pt,
+    enlarge x limits=0.4,
+    every axis plot/.append style={fill=blue!60},
+    error bars/y dir=both,
+    error bars/y explicit,
+]
+\addplot+[fill=red!40] coordinates {
+    (One-hot (91 feat.), 24.08) +- (0, 1.51)
+};
+\addplot+[fill=green!50] coordinates {
+    (Categórico (26 feat.), 23.39) +- (0, 1.37)
+};
+\legend{One-hot, Categórico}
+\end{axis}
+\end{tikzpicture}
+\caption{RMSPE médio com barras de desvio-padrão ($\pm$1\,d.p. entre folds). A representação categórica nativa superou o one-hot em todos os cinco folds, com ganhos entre 0,06 e 1,61 ponto percentual.}
+\label{fig:bairro_categorico}
+\end{figure}
+
+\subsection{Otimização de hiperparâmetros}
+
+O LightGBM foi otimizado com \lstinline{RandomizedSearchCV} (40 combinações $\times$ 5 folds = 200 treinamentos). A melhor combinação de taxa de aprendizado e número de árvores foi \lstinline{learning_rate=0,03} com 600--800 árvores, atingindo RMSPE médio de 23,34\%.
+
+% ══════════════════════════════════════════════════════════════
+\section{Correspondências estruturais e pós-processamento}
+
+\subsection{Repetições entre treino e teste}
+
+Conforme descrito na auditoria de dados (Seção 4.2), 433 dos 2.000 imóveis de teste possuem combinação completa de features muito similar a pelo menos um imóvel do treino, formando 843 pares praticamente iguais. Isso indica repetição de anúncios ou registros no dataset. As chaves de correspondência utilizadas são:
+
+\begin{center}
+\texttt{tipo, bairro, area\_util, area\_extra, quartos, suites, vagas}
+\end{center}
+
+\subsection{Pós-processamento por correspondência}
+
+Para imóveis com correspondência estrutural, a previsão final combina a saída do modelo com a mediana de preço dos registros correspondentes no treino:
+
+\begin{equation}
+\hat{y}_{\text{final}} = (1 - w) \cdot \hat{y}_{\text{modelo}} + w \cdot \text{mediana}_{\text{correspondência}}
+\end{equation}
+
+A mediana de correspondência é calculada somente com os dados de treino de cada fold, evitando vazamento do alvo. Na base final, 988 dos 2.000 imóveis de teste ($\sim$49\%) encontraram pelo menos uma correspondência. O peso $w = 0{,}30$ foi o melhor internamente e confirmou-se no Kaggle, produzindo um platô estável entre 25\% e 40\%.
+
+% ══════════════════════════════════════════════════════════════
+\section{Combinação de modelos (Blend) e pesos por preço}
+
+\subsection{Conceito do blend}
+
+Como XGBoost e LightGBM obtiveram resultados muito próximos na modelagem inicial, foi testada a combinação de suas previsões por média simples --- uma técnica chamada \textbf{blend}. A ideia é que, por usarem estratégias diferentes de construção de árvores e tratamento de categorias, os dois modelos tendem a errar em imóveis diferentes. Ao calcular a média das previsões, os erros individuais se compensam parcialmente, reduzindo a variância sem aumentar o viés.
+
+O blend de 50\% XGBoost e 50\% LightGBM obteve \textbf{23,14\%} no KFold, melhor que ambos os modelos isolados. Esse resultado motivou o uso de blends em todos os experimentos subsequentes.
+
+\subsection{Sample weights: alinhando treino e métrica}
+
+Como o RMSPE penaliza erros percentuais, imóveis baratos dominam a métrica. A função de perda padrão (MSE sobre log) já aproxima erros proporcionais, mas não dá prioridade explícita a nenhuma faixa de preço. A introdução de $\text{sample\_weight} = 1 / \text{preco}^\alpha$, normalizado para média 1, força o modelo a ``se esforçar mais'' nos imóveis baratos.
+
+\subsection{Resultados do blend XGBoost/LightGBM com diferentes alphas}
+
+A Figura~\ref{fig:sample_weights} mostra a evolução do RMSPE em função do expoente $\alpha$ dos sample weights, tanto no KFold quanto no holdout por blocos de ID.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=12cm,
+    height=7cm,
+    xlabel={$\alpha$ (expoente do sample weight)},
+    ylabel={RMSPE (\%)},
+    xmin=-0.1, xmax=1.7,
+    ymin=20.5, ymax=23.5,
+    xtick={0, 0.5, 1.0, 1.5},
+    legend pos=north east,
+    grid=major,
+    grid style={dashed, gray!30},
+    mark size=3pt,
+    thick,
+]
+\addplot[color=blue, mark=square*, thick] coordinates {
+    (0.00, 23.14)
+    (0.50, 22.32)
+    (1.00, 21.73)
+    (1.50, 21.54)
+};
+\addlegendentry{KFold (5 folds)}
+
+\addplot[color=red, mark=triangle*, thick] coordinates {
+    (0.00, 21.86)
+    (0.50, 21.42)
+    (1.00, 20.96)
+    (1.50, 20.91)
+};
+\addlegendentry{Holdout por ID}
+
+\end{axis}
+\end{tikzpicture}
+\caption{RMSPE do blend XGBoost/LightGBM em função de $\alpha$. O ganho veio principalmente dos imóveis baratos: no quartil até R\$\,355 mil, o RMSPE caiu de 27,34\% ($\alpha=0$) para 23,78\% ($\alpha=1{,}5$). Em contrapartida, o quartil mais caro subiu de 22,62\% para 23,77\%.}
+\label{fig:sample_weights}
+\end{figure}
+
+No Kaggle, o blend com $\alpha=1{,}5$ obteve \textbf{21,86\%}, contra 22,63\% com $\alpha=1$ --- confirmando externamente a vantagem dos pesos mais agressivos.
+
+% ══════════════════════════════════════════════════════════════
+\section{CatBoost e Blend Global}
+
+\subsection{CatBoost como terceiro modelo}
+
+O CatBoost foi testado com categorias totalmente nativas (\texttt{tipo}, \texttt{bairro}, \texttt{tipo\_vendedor}, \texttt{diferenciais}), dispensando qualquer codificação prévia. Com \lstinline{sample_weight = 1/preco} e correspondência de 30\%, obteve RMSPE de 21,97\% no KFold --- competitivo com o blend LightGBM/XGBoost.
+
+No Kaggle, o CatBoost com $\alpha=1{,}5$ e correspondência de 30\% obteve \textbf{21,82\%}.
+
+\subsection{Blend global de três modelos}
+
+A combinação de 60\% CatBoost + 20\% XGBoost + 20\% LightGBM, todos com $\alpha=1{,}5$ e correspondência de 30\%, obteve \textbf{21,45\%} no Kaggle --- melhorando 0,37 ponto sobre o CatBoost isolado e 0,41 ponto sobre o blend XGBoost/LightGBM. Esse resultado confirmou que os modelos cometem erros complementares e estabeleceu a referência \textbf{generalista}.
+
+% ══════════════════════════════════════════════════════════════
+\section{Especialista para imóveis baratos}
+
+\subsection{Motivação}
+
+Apesar da melhora trazida pelos sample weights, o generalista ainda apresentava RMSPE alto no quartil de imóveis baratos (até R\$\,355 mil). Um CatBoost dedicado, com ponderação extrema (\lstinline{sample_weight = 1/preco²}), foi buscado para essa faixa.
+
+\subsection{Busca e configuração final}
+
+Foram realizados 85 treinamentos em sete blocos experimentais. O melhor especialista:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Parâmetro} & \textbf{Valor} \\
+\midrule
+Alvo                  & \lstinline{log1p(preco)} \\
+\texttt{sample\_weight} & $1 / \text{preco}^2$ \\
+\texttt{depth}         & 7 \\
+\texttt{iterations}    & 600 \\
+\texttt{random\_strength} & 0 \\
+Bootstrap              & Bayesiano \\
+Correspondência        & 0\% \\
+Fator de calibração    & 0,914489 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Resultado do especialista}
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    ybar,
+    width=9cm,
+    height=5.5cm,
+    ylabel={RMSPE até R\$\,355 mil (\%)},
+    symbolic x coords={Cat original ($\alpha$=1.5), Especialista final},
+    xtick=data,
+    ymin=18, ymax=20,
+    nodes near coords,
+    nodes near coords style={font=\small, /pgf/number format/.cd, fixed, precision=2},
+    bar width=25pt,
+    enlarge x limits=0.4,
+]
+\addplot+[fill=red!40] coordinates {(Cat original ($\alpha$=1.5), 19.29)};
+\addplot+[fill=green!50] coordinates {(Especialista final, 18.90)};
+\end{axis}
+\end{tikzpicture}
+\caption{RMSPE calibrado cross-fit no quartil de imóveis até R\$\,355 mil. A melhora apareceu em quatro dos cinco folds, com intervalo indicativo de 0,14 a 0,66 ponto percentual.}
+\label{fig:especialista}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\section{Arquitetura de roteamento com juiz}
+
+\subsection{Conceito}
+
+A ideia é usar o generalista para a maioria dos imóveis e substituí-lo parcialmente pelo especialista nos imóveis onde esse último é superior. Um modelo ``juiz'' aprende a estimar, para cada linha, o peso ótimo do especialista.
+
+\subsection{Juiz binário (classificador de utilidade)}
+
+Um \lstinline{CatBoostClassifier} aprendeu se o especialista produziu menor perda percentual quadrática que o generalista, ponderado pelo impacto absoluto da decisão. A previsão final é:
+
+\begin{equation}
+\hat{y} = G + \lambda \cdot w_{\text{juiz}} \cdot (S - G)
+\end{equation}
+
+\noindent onde $G$ é a previsão do generalista, $S$ a do especialista, $w_{\text{juiz}}$ o peso previsto pelo juiz e $\lambda$ a intensidade do roteamento.
+
+Quatro juízes supervisionados foram comparados em cross-fit. O classificador de utilidade venceu com RMSPE de 21,3394\%, contra 21,4066\% do generalista sem juiz. No Kaggle, com intensidade $\lambda=1{,}00$, obteve \textbf{21,33\%}.
+
+\subsection{Juiz contínuo}
+
+O último refinamento substituiu a classificação binária por uma regressão que estima diretamente o peso ótimo do especialista, usando como pseudo-alvo $(y-G)/D$ projetado em $[0,1]$ e ponderado por $(D/y)^2$.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lrr}
+\toprule
+\textbf{Modelo} & \textbf{RMSPE cross-fit} & \textbf{RMSPE holdout por ID} \\
+\midrule
+Juiz binário (melhor intensidade) & 21,3394\% & 21,0035\% \\
+\textbf{Juiz contínuo calibrado}  & \textbf{21,2873\%} & \textbf{20,9536\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+O juiz contínuo superou o binário nos cinco folds, com ganhos entre 0,012 e 0,074 ponto percentual.
+
+% ══════════════════════════════════════════════════════════════
+\section{Discussão dos Resultados}
+
+\subsection{Por que a transformação logarítmica foi essencial?}
+
+A transformação \lstinline{log1p} reduziu o RMSPE em mais de 10 pontos percentuais na regressão linear e eliminou previsões negativas. A explicação é que o RMSPE avalia erro relativo, e o log transforma divisão em subtração --- ao minimizar o MSE no espaço log, o modelo aprende proporções naturalmente. Todos os modelos subsequentes foram treinados com esse alvo.
+
+\subsection{Por que a categoria nativa superou o one-hot?}
+
+O one-hot encoding criava 66 colunas binárias para os bairros, dificultando que as árvores tratassem em conjunto bairros com comportamento semelhante e favorecendo a memorização de bairros com poucos exemplos. A representação categórica nativa permite ao LightGBM/CatBoost procurar separações ótimas entre grupos de bairros durante a construção de cada árvore, obtendo mais informação com menos dimensões.
+
+\subsection{Por que sample weights ajudaram tanto?}
+
+O RMSPE é uma métrica assimétrica em relação ao preço: um erro de R\$\,50 mil em um imóvel de R\$\,100 mil contribui 25 vezes mais que o mesmo erro em um imóvel de R\$\,500 mil. A função de perda padrão (MSE no log) já aproxima erros proporcionais, mas trata todas as faixas igualmente. Os sample weights $1/\text{preco}^\alpha$ fazem o modelo gastar mais capacidade nos imóveis baratos, alinhando explicitamente treino e avaliação. O ganho foi de mais de 2 pontos percentuais no Kaggle.
+
+\subsection{Por que o blend global foi superior aos modelos isolados?}
+
+O CatBoost, XGBoost e LightGBM usam estratégias diferentes de construção de árvores, tratamento de categorias e regularização. Isso faz com que cometam erros em imóveis diferentes. A média ponderada das previsões reduziu a variância sem aumentar o viés, melhorando o RMSPE final.
+
+\subsection{Por que o juiz contínuo superou o binário?}
+
+O juiz binário decide apenas ``sim ou não'' para o uso do especialista, perdendo informação sobre o grau de confiança. O juiz contínuo estima diretamente o peso ótimo, permitindo transições suaves entre generalista e especialista. Isso é especialmente útil nos imóveis na fronteira entre ``baratos'' e ``intermediários'', onde nenhum dos dois modelos é claramente superior.
+
+\subsection{Sobre a divergência entre validação interna e Kaggle}
+
+A separação de treino e teste no Kaggle não é aleatória --- os IDs de teste são sistematicamente menores. Isso faz com que o KFold aleatório subestime ou superestime ganhos de certas estratégias (como a recuperação de linhas anômalas). A adoção do holdout por blocos de ID como validação complementar foi a medida mais importante para alinhar validação interna com o score público.
+
+% ══════════════════════════════════════════════════════════════
+\section{Evolução dos resultados no Kaggle}
+
+A Figura~\ref{fig:evolucao_kaggle} apresenta a progressão cronológica do RMSPE público ao longo das principais submissões.
+
+\begin{figure}[h]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    xbar,
+    width=14cm,
+    height=10cm,
+    xlabel={RMSPE no Kaggle (\%)},
+    symbolic y coords={
+        {Juiz binário},
+        {Blend global 60/20/20},
+        {CatBoost $\alpha$=1.5},
+        {Blend XGB/LGB $\alpha$=1.5},
+        {XGBoost target enc.},
+        {LGB corrigido + corr. 30\%},
+        {LGB 800 árv. categórico},
+        {LGB ajustado},
+        {LGB inicial}
+    },
+    ytick=data,
+    xmin=20, xmax=29,
+    nodes near coords,
+    nodes near coords align={horizontal},
+    nodes near coords style={font=\small, /pgf/number format/.cd, fixed, precision=2},
+    bar width=10pt,
+    enlarge y limits=0.08,
+    y tick label style={font=\small},
+    every axis plot/.append style={fill=blue!50},
+]
+\addplot coordinates {
+    (27.85,{LGB inicial})
+    (27.95,{LGB ajustado})
+    (25.50,{LGB 800 árv. categórico})
+    (24.76,{LGB corrigido + corr. 30\%})
+    (24.86,{XGBoost target enc.})
+    (21.86,{Blend XGB/LGB $\alpha$=1.5})
+    (21.82,{CatBoost $\alpha$=1.5})
+    (21.45,{Blend global 60/20/20})
+    (21.33,{Juiz binário})
+};
+\end{axis}
+\end{tikzpicture}
+\caption{Evolução cronológica do RMSPE público no Kaggle. As maiores quedas vieram da introdução de sample weights ($\sim$3 p.p.) e da adição de dados corrigidos com correspondência estrutural ($\sim$2,6 p.p.).}
+\label{fig:evolucao_kaggle}
+\end{figure}
+
+% ══════════════════════════════════════════════════════════════
+\section{Conclusão}
+
+O modelo final utilizado na competição é uma \textbf{arquitetura de roteamento} com a seguinte composição:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+\textbf{Componente} & \textbf{Detalhes} \\
+\midrule
+\textbf{Generalista}   & Blend: 60\% CatBoost + 20\% XGBoost + 20\% LightGBM \\
+Ponderação              & \lstinline{sample_weight = 1/preco^1.5} em todos os componentes \\
+Correspondência         & 30\% da mediana estrutural para $\sim$49\% dos imóveis de teste \\
+\textbf{Especialista}  & CatBoost depth 7, 600 iterações, $1/\text{preco}^2$, calibração 0,914 \\
+\textbf{Juiz contínuo} & CatBoost regressão, alvo projetado $[0,1]$, calibrado cross-fit \\
+Mapeamento final        & $\text{clip}(-0{,}45 + 1{,}50 \times \text{score\_juiz},\; 0,\; 1)$ \\
+Alvo de treino          & \lstinline{log1p(preco)} \\
+Dados de treino         & 4.678 imóveis (5 exclusões, correções conservadoras de escala) \\
+Features                & 26 (com bairro como categoria nativa) \\
+Melhor score Kaggle     & \textbf{21,33\%} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+As estratégias que se mostraram mais efetivas foram, em ordem de impacto:
+
+\begin{enumerate}
+  \item \textbf{Transformação logarítmica} do preço ($\sim$10\,p.p. de ganho na regressão linear);
+  \item \textbf{Sample weights por preço} ($\sim$2\,p.p. de ganho no Kaggle);
+  \item \textbf{Correspondência estrutural} de registros repetidos ($\sim$0,3--1,5\,p.p.);
+  \item \textbf{Categoria nativa} para bairros ($\sim$0,7\,p.p.);
+  \item \textbf{Blend de três modelos} ($\sim$0,4\,p.p.);
+  \item \textbf{Roteamento com juiz} ($\sim$0,1\,p.p.);
+  \item \textbf{Auditoria e correção conservadora} de erros de escala (melhora indireta via qualidade dos dados).
+\end{enumerate}
+
+Tentativas de ampliar a busca de hiperparâmetros do LightGBM ajustado, corrigir \texttt{area\_extra} em apartamentos e usar o XGBoost inicial sem otimização não trouxeram ganho no placar real.
+
+% ══════════════════════════════════════════════════════════════
+\section{Referências}
+
+\begin{itemize}
+  \item Scikit-learn: \url{https://scikit-learn.org/}
+  \item LightGBM: \url{https://lightgbm.readthedocs.io/}
+  \item XGBoost: \url{https://xgboost.readthedocs.io/}
+  \item CatBoost: \url{https://catboost.ai/}
+  \item Pandas: \url{https://pandas.pydata.org/}
+\end{itemize}
+
+\end{document}

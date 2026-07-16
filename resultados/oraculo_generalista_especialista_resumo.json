@@ -1,0 +1,12 @@
+{
+  "rmspe_generalista": 0.2140663320251017,
+  "rmspe_especialista_global": 0.2522095010883501,
+  "rmspe_oraculo_por_linha": 0.17954451430281673,
+  "fracao_linhas_especialista_vence": 0.297990594271056,
+  "limiar_oraculo_preco_real": 328600.0,
+  "rmspe_limiar_preco_real": 0.20384464916605688,
+  "fracao_especialista_limiar_real": 0.18490808037622916,
+  "melhor_limiar_preco_previsto_in_sample": 210532.5882774514,
+  "rmspe_limiar_preco_previsto_in_sample": 0.2141559244870828,
+  "fracao_especialista_limiar_previsto": 0.025010688328345448
+}
