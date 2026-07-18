@@ -1,0 +1,18 @@
+{
+  "submission_base": "submission_juiz_componentes_ancorado.csv",
+  "correspondencia_teste": 988,
+  "arquivos": {
+    "submission_blend_rmspe_raw_w250.csv": {
+      "peso_lgb_raw": 0.25,
+      "alteracao_media_reais": 9103.986496696638,
+      "alteracao_maxima_reais": 130086.19837645581,
+      "linhas_alteradas_acima_1pct": 746
+    },
+    "submission_blend_rmspe_raw_w125.csv": {
+      "peso_lgb_raw": 0.125,
+      "alteracao_media_reais": 4551.993248348318,
+      "alteracao_maxima_reais": 65043.099188227905,
+      "linhas_alteradas_acima_1pct": 346
+    }
+  }
+}
