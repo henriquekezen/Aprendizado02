@@ -1,0 +1,113 @@
+[
+  {
+    "nome": "xgb_thr850",
+    "modelo": "xgb",
+    "limite_treino": 850000
+  },
+  {
+    "nome": "xgb_thr875",
+    "modelo": "xgb",
+    "limite_treino": 875000
+  },
+  {
+    "nome": "xgb_thr925",
+    "modelo": "xgb",
+    "limite_treino": 925000
+  },
+  {
+    "nome": "xgb900_d3_mc3_i1000",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "max_depth": 3,
+      "min_child_weight": 3,
+      "n_estimators": 1000
+    }
+  },
+  {
+    "nome": "xgb900_d4_mc3_i1000",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "max_depth": 4,
+      "min_child_weight": 3,
+      "n_estimators": 1000
+    }
+  },
+  {
+    "nome": "xgb900_d4_mc10_i1000",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "max_depth": 4,
+      "min_child_weight": 10,
+      "n_estimators": 1000
+    }
+  },
+  {
+    "nome": "xgb900_d5_mc5_i1000",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "max_depth": 5,
+      "min_child_weight": 5,
+      "n_estimators": 1000
+    }
+  },
+  {
+    "nome": "xgb900_i1200",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "n_estimators": 1200
+    }
+  },
+  {
+    "nome": "xgb900_features_caras",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "features_caras": true
+  },
+  {
+    "nome": "xgb900_target_encoding",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "target_encoding": true
+  },
+  {
+    "nome": "xgb900_features_caras_te",
+    "modelo": "xgb",
+    "limite_treino": 900000,
+    "features_caras": true,
+    "target_encoding": true
+  },
+  {
+    "nome": "lgb900_l31_d7_mc40_i600",
+    "modelo": "lgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "num_leaves": 31,
+      "max_depth": 7,
+      "min_child_samples": 40,
+      "n_estimators": 600
+    }
+  },
+  {
+    "nome": "lgb900_l63_d8_mc40_i800",
+    "modelo": "lgb",
+    "limite_treino": 900000,
+    "overrides": {
+      "num_leaves": 63,
+      "max_depth": 8,
+      "min_child_samples": 40,
+      "n_estimators": 800
+    }
+  },
+  {
+    "nome": "lgb900_features_caras_te",
+    "modelo": "lgb",
+    "limite_treino": 900000,
+    "features_caras": true,
+    "target_encoding": true
+  }
+]

@@ -1,0 +1,14 @@
+{
+  "livre": {
+    "intercepto": 0.10000000000000009,
+    "inclinacao": 1.0,
+    "rmspe": 0.2117026932494267,
+    "media_r_treino": 0.6558483947815968
+  },
+  "ancorada_publico": {
+    "intercepto": -0.2353295967382492,
+    "inclinacao": 1.3,
+    "rmspe": 0.21199258202425972,
+    "media_r_treino": 0.4874518666234162
+  }
+}

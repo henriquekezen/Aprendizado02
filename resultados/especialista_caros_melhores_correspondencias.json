@@ -1,0 +1,18 @@
+{
+  "xgb900": {
+    "peso_correspondencia": 0.3,
+    "calibracao_individual": "log_afim"
+  },
+  "xgb_te950": {
+    "peso_correspondencia": 0.3,
+    "calibracao_individual": "log_afim"
+  },
+  "xgb_feat_te950": {
+    "peso_correspondencia": 0.3,
+    "calibracao_individual": "log_afim"
+  },
+  "lgb31_950": {
+    "peso_correspondencia": 0.3,
+    "calibracao_individual": "log_afim"
+  }
+}

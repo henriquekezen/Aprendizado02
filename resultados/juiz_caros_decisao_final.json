@@ -1,0 +1,30 @@
+{
+  "estrategia": "utilidade_gate_faixa",
+  "familia_meta_modelo": "LightGBM",
+  "protecao": "probabilidade_preco_maior_igual_1m_elevada_a_gamma",
+  "parametros_mapeamento": {
+    "centro_score": 0.500840730262808,
+    "escala_score": 0.20987594774361448,
+    "gamma": 6.0,
+    "rmspe_treino": 0.2107769724835432
+  },
+  "rmspe_base_oof": 0.21205824414545832,
+  "rmspe_oof_aninhado_semente42": 0.2106871131169917,
+  "rmspe_oof_mapeamento_final": 0.2107769724835432,
+  "rmspe_medio_tres_sementes": 0.2103071034614686,
+  "ganho_medio_tres_sementes_pp": 0.1751140683989673,
+  "ganho_minimo_semente_pp": 0.137113102846656,
+  "folds_melhores_total": 14,
+  "rmspe_base_holdout": 0.20784386749850803,
+  "rmspe_holdout": 0.2053923107193788,
+  "ganho_holdout_pp": 0.2451556779129227,
+  "peso_medio_teste": 0.08726124250782728,
+  "peso_mediano_teste": 4.521987816709718e-18,
+  "peso_p90_teste": 0.4292680391090801,
+  "fracao_peso_menor_001": 0.772,
+  "fracao_peso_maior_05": 0.078,
+  "alteracao_absoluta_media_reais": 18706.22071303218,
+  "tempo_treino_final_segundos": 1.6641168000060134,
+  "arquivo_submission": "submission_juiz_especialista_caros.csv",
+  "arquivo_previsoes": "juiz_caros_previsoes_teste.csv"
+}

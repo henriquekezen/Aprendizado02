@@ -1,0 +1,79 @@
+{
+  "arvores": [
+    {
+      "nome": "log_all_bm05",
+      "target": "log",
+      "beta": -0.5
+    },
+    {
+      "nome": "log_all_b000",
+      "target": "log",
+      "beta": 0.0
+    },
+    {
+      "nome": "log_all_b050",
+      "target": "log",
+      "beta": 0.5
+    },
+    {
+      "nome": "log_all_b100",
+      "target": "log",
+      "beta": 1.0
+    },
+    {
+      "nome": "log_sub830",
+      "target": "log",
+      "limite_treino": 830000
+    },
+    {
+      "nome": "log_sub950",
+      "target": "log",
+      "limite_treino": 950000
+    },
+    {
+      "nome": "raw_sub830_rmspe",
+      "target": "raw",
+      "limite_treino": 830000,
+      "peso_rmspe_raw": true
+    },
+    {
+      "nome": "raw_sub950_rmspe",
+      "target": "raw",
+      "limite_treino": 950000,
+      "peso_rmspe_raw": true
+    }
+  ],
+  "catboost": [
+    {
+      "nome": "cat_log_all_b000",
+      "target": "log",
+      "beta": 0.0
+    },
+    {
+      "nome": "cat_log_all_b050",
+      "target": "log",
+      "beta": 0.5
+    },
+    {
+      "nome": "cat_log_all_b100",
+      "target": "log",
+      "beta": 1.0
+    },
+    {
+      "nome": "cat_log_all_b150",
+      "target": "log",
+      "beta": 1.5
+    },
+    {
+      "nome": "cat_log_sub830",
+      "target": "log",
+      "limite_treino": 830000
+    },
+    {
+      "nome": "cat_log_sub950",
+      "target": "log",
+      "limite_treino": 950000
+    }
+  ],
+  "xgb_device": "cpu"
+}

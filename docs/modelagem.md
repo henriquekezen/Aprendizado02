@@ -766,4 +766,41 @@ O generalista foi reconstruído com RMSPE OOF de 21,4066%, muito próximo dos 21
 
 O especialista e o juiz foram então treinados em toda a base. Foram geradas três intensidades convexas do roteamento: 0,40, 0,70 e 1,00. Os detalhes da arquitetura, validação, arquivos e interpretação dos futuros scores do Kaggle estão em `docs/relatorio_juiz_especialista.md`.
 
-No Kaggle, essas intensidades obtiveram respectivamente 21,38%, 21,34% e 21,33%, contra 21,45% do generalista. A curva pública indicou que novos ajustes de intensidade não trariam melhora visível. Um último juiz contínuo foi então treinado para estimar diretamente o peso ótimo do especialista, usando o impacto `(especialista-generalista)^2/preco^2` de cada linha no RMSPE. A variante com alvo projetado em `[0,1]` chegou a 21,2873% cross-fit e 20,9536% no holdout por IDs, superando o juiz binário em aproximadamente 0,05 ponto nos dois testes. Como a melhora ocorreu nos cinco folds, foi gerada a candidata final `submissions/submission_juiz_continuo_rmspe.csv`.
+No Kaggle, essas intensidades obtiveram respectivamente 21,38%, 21,34% e 21,33%, contra 21,45% do generalista. A curva pública indicou que novos ajustes de intensidade não trariam melhora visível. Um juiz contínuo foi então treinado para estimar diretamente o peso ótimo do especialista, usando o impacto `(especialista-generalista)^2/preco^2` de cada linha no RMSPE. A variante com alvo projetado em `[0,1]` chegou a 21,2873% cross-fit e 20,9536% no holdout por IDs, superando o juiz binário em aproximadamente 0,05 ponto nos dois testes. No Kaggle, obteve 21,30%.
+
+Um segundo juiz contínuo passou então a dividir dinamicamente a parcela generalista entre CatBoost e árvores. A versão escolhida ancora a fração média de árvores no ótimo público de 48,7%, mas permite variação por imóvel. Ela chegou a 21,2058% cross-fit, 20,7844% no holdout e melhorou os cinco folds. Foi gerada `submissions/submission_juiz_componentes_ancorado.csv`; os detalhes estão em `docs/relatorio_juiz_especialista.md`.
+
+O segundo juiz obteve 21,19% no Kaggle. Uma última calibração, usando intensidade 1,75 em torno da referência de 40% de árvores, chegou a 21,1972% OOF e 20,7128% no holdout. Ela foi salva como `submissions/submission_juiz_componentes_intensidade175.csv`. Essa é a última candidata de ajuste de pesos antes da busca de um especialista para a faixa cara.
+
+## Especialista para imóveis caros
+
+Foi congelado um novo especialista composto por 72,5% XGBoost e 27,5%
+LightGBM, treinado somente na região cara e com a função quadrática ponderada
+para equivaler ao RMSPE. A configuração obteve 19,81% em média nas três
+sementes para imóveis a partir de R$ 950 mil e 22,65% a partir de R$ 1,3 milhão.
+No holdout por ID, superou com margem tanto as árvores atuais quanto o pipeline
+público de 21,19% nessas faixas.
+
+A análise por intervalos mostrou que o ganho consistente começa por volta de
+R$ 1 milhão; abaixo disso o modelo não deve receber peso global. Nenhum juiz ou
+submission foi criado nesta etapa. O protocolo, todas as hipóteses e os
+artefatos estão em `docs/relatorio_especialista_caros.md`.
+
+## Juiz do especialista caro
+
+O especialista caro foi incorporado por um novo juiz LightGBM validado de forma
+aninhada. Ele estima tanto a utilidade do especialista quanto a probabilidade
+de o imóvel estar acima de R$ 1 milhão. A probabilidade de faixa elevada à
+sexta potência protege as regiões em que o especialista extrapola mal.
+
+O RMSPE aninhado médio em três sementes caiu de 21,2058% para 21,0307%, com
+ganho nas três sementes e em 14 dos 15 folds. No holdout por ID, caiu de
+20,7844% para 20,5392%. Foi gerada apenas
+`submissions/submission_juiz_especialista_caros.csv`. O protocolo e a análise
+por faixa estão em `docs/relatorio_juiz_caros.md`.
+
+No Kaggle, porém, o juiz caro piorou para 22,32%. Ele foi descartado e a etapa
+seguinte passou a separar erro do juiz de erro do especialista. Duas ablações
+alteram somente os 100 imóveis com maior preço previsto pelo pipeline de 21,19%,
+usando 50% e 100% do especialista caro. Os detalhes estão em
+`docs/relatorio_gate_conservador_caros.md`.

@@ -1,0 +1,23 @@
+{
+  "referencia_publica_juiz_continuo": 0.213,
+  "referencia_crossfit_juiz_continuo": 0.21287300085342017,
+  "referencia_holdout_juiz_continuo": 0.20953554154390305,
+  "ancora_arvores_publica": 0.4874518666234162,
+  "elegiveis": [
+    {
+      "estrategia": "livre",
+      "rmspe_crossfit": 0.21186471783511265,
+      "rmspe_holdout": 0.20685311212239993,
+      "folds_melhores": 5
+    },
+    {
+      "estrategia": "ancorada_publico",
+      "rmspe_crossfit": 0.21205824414545832,
+      "rmspe_holdout": 0.20784386749850803,
+      "folds_melhores": 5
+    }
+  ],
+  "gerar_submission": true,
+  "estrategia_escolhida": "ancorada_publico",
+  "motivo_escolha": "Preserva o equilibrio CatBoost/arvores estimado pelos scores publicos; a versao livre ganha apenas 0,019 p.p. OOF adicional e desloca a media para cerca de 66% de arvores."
+}

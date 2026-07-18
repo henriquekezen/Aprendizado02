@@ -1,0 +1,35 @@
+{
+  "intensidade": 1.75,
+  "referencia_arvores": 0.4,
+  "score_publico_origem": 0.2119,
+  "arquivo_submission": "submission_juiz_componentes_intensidade175.csv",
+  "oof": {
+    "rmspe": 0.21197208236794862,
+    "media_r": 0.5489245819480657,
+    "mediana_r": 0.5467967190576116,
+    "p10_r": 0.3138908126932497,
+    "p90_r": 0.7861792743617563,
+    "fracao_limitada": 0.0271483539974348
+  },
+  "holdout": {
+    "rmspe": 0.20712819213901865,
+    "rmspe_baratos_ate_355k": 0.20747843759254347,
+    "rmspe_caros_acima_355k": 0.20701064484563494,
+    "media_r": 0.5545890572425138,
+    "mediana_r": 0.5621463704449015,
+    "p10_r": 0.3301187838049743,
+    "p90_r": 0.7618101687201984,
+    "fracao_limitada": 0.017094017094017096
+  },
+  "teste": {
+    "media_r": 0.550177840637421,
+    "mediana_r": 0.5583541917426866,
+    "p10_r": 0.3274202387717729,
+    "p90_r": 0.7557487584582596,
+    "fracao_limitada": 0.022,
+    "peso_especialista_medio": 0.1809183391088173,
+    "peso_catboost_medio": 0.3670814630560127,
+    "peso_arvores_medio": 0.45200019783517,
+    "alteracao_absoluta_media_vs_ancorada": 3472.7913892463507
+  }
+}

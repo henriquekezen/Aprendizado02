@@ -1,0 +1,51 @@
+{
+  "status": "congelado_validado",
+  "gera_submission": false,
+  "quantidade_treino_total": 4678,
+  "quantidade_treino_xgb": 1021,
+  "quantidade_treino_lgb": 947,
+  "quantidade_teste": 2000,
+  "xgb": {
+    "limite_treino": 900000,
+    "target": "preco/1e6",
+    "sample_weight": "1/preco**2 normalizado",
+    "peso_correspondencia": 0.5
+  },
+  "lightgbm": {
+    "limite_treino": 950000,
+    "target": "preco/1e6",
+    "sample_weight": "1/preco**2 normalizado",
+    "peso_correspondencia": 0.5,
+    "overrides": {
+      "num_leaves": 31,
+      "max_depth": 7,
+      "min_child_samples": 40,
+      "n_estimators": 600
+    }
+  },
+  "blend": {
+    "peso_xgb": 0.725,
+    "peso_lightgbm": 0.275
+  },
+  "calibracao_final": {
+    "tipo": "log_afim",
+    "origem": "OOF semente 42, apenas preco >= 950000",
+    "a": -0.021738209421210606,
+    "b": -0.09340395058251726,
+    "centro": 14.169956597889856
+  },
+  "correspondencia_teste": {
+    "quantidade": 988,
+    "proporcao": 0.494
+  },
+  "previsoes_teste": {
+    "minimo": 556636.9307698935,
+    "p05": 671683.8966691798,
+    "mediana": 972351.9853715948,
+    "p95": 1688374.0884599339,
+    "maximo": 3833088.473719318,
+    "media": 1021972.9218299007
+  },
+  "duracao_segundos": 2.1585013999720104,
+  "arquivo_previsoes": "especialista_caros_previsoes_teste.csv"
+}

@@ -1,0 +1,67 @@
+{
+  "objetivo": "Distinguir falha do juiz anterior de falha de transferencia do especialista caro.",
+  "score_publico_base": 0.2119,
+  "fracao_top": 0.05,
+  "quantidade_teste_alterada": 100,
+  "criterio_ranking": "maior previsao do pipeline publico 21.19",
+  "resultados": [
+    {
+      "fracao_top": 0.05,
+      "peso_especialista": 0.5,
+      "quantidade_oof": 235,
+      "quantidade_teste": 100,
+      "rmspe_base_oof": 0.21205824414545832,
+      "rmspe_gate_oof": 0.21043141651513067,
+      "ganho_oof_pp": 0.16268276303276485,
+      "folds_melhores": 5,
+      "preco_pipeline_minimo_teste": 1457100.6399518554,
+      "peso_medio_global_teste": 0.025,
+      "alteracao_absoluta_media_selecionados": 126617.12437900782,
+      "alteracao_absoluta_media_global": 6330.856218950392,
+      "arquivo_submission": "submission_diagnostico_caros_top05_w050.csv",
+      "bootstrap": {
+        "ganho_mediano_pp": 0.16384924980764465,
+        "ic95_inferior_pp": 0.08773084892655436,
+        "ic95_superior_pp": 0.23161485876328883,
+        "probabilidade_ganho": 1.0
+      },
+      "ganho_fold_1_pp": 0.21428468874548912,
+      "ganho_fold_2_pp": 0.24069746886089816,
+      "ganho_fold_3_pp": 0.12363520644866066,
+      "ganho_fold_4_pp": 0.09457071102621506,
+      "ganho_fold_5_pp": 0.13566806163234357
+    },
+    {
+      "fracao_top": 0.05,
+      "peso_especialista": 1.0,
+      "quantidade_oof": 235,
+      "quantidade_teste": 100,
+      "rmspe_base_oof": 0.21205824414545832,
+      "rmspe_gate_oof": 0.2099561188530053,
+      "ganho_oof_pp": 0.21021252924530165,
+      "folds_melhores": 5,
+      "preco_pipeline_minimo_teste": 1457100.6399518554,
+      "peso_medio_global_teste": 0.05,
+      "alteracao_absoluta_media_selecionados": 253234.24875801563,
+      "alteracao_absoluta_media_global": 12661.712437900782,
+      "arquivo_submission": "submission_diagnostico_caros_top05_w100.csv",
+      "bootstrap": {
+        "ganho_mediano_pp": 0.21472109146967316,
+        "ic95_inferior_pp": 0.04889253940172762,
+        "ic95_superior_pp": 0.3446263662909716,
+        "probabilidade_ganho": 0.9952
+      },
+      "ganho_fold_1_pp": 0.3358448980576051,
+      "ganho_fold_2_pp": 0.3946290472795627,
+      "ganho_fold_3_pp": 0.09138213374839665,
+      "ganho_fold_4_pp": 0.06699248680811787,
+      "ganho_fold_5_pp": 0.15259622236815096
+    }
+  ],
+  "interpretacao": {
+    "ambas_melhoram": "Especialista transfere; comparar intensidades e depois avaliar ampliar ou treinar residual.",
+    "w050_melhora_w100_piora": "Especialista tem direcao util, mas precisa shrinkage/calibracao.",
+    "ambas_pioram": "Especialista/calibracao nao transfere nem no topo; nao criar novo juiz antes de redesenhar o especialista.",
+    "w100_melhora_mais": "Problema principal era falso positivo do juiz; especialista funciona quando selecionado por ranking extremo."
+  }
+}

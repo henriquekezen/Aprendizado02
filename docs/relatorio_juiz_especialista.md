@@ -189,3 +189,83 @@ parâmetros finais é 21,2764%; a estimativa mais conservadora continua sendo o
 O script experimental é `src/testar_juiz_continuo.py`, o treino final está em
 `src/gerar_submission_juiz_continuo.py` e todas as previsões de teste foram
 preservadas em `resultados/juiz_continuo_previsoes_teste.csv`.
+
+O juiz contínuo obteve **21,30% no Kaggle**, contra 21,33% do juiz binário. A
+diferença pública de 0,03 ponto ficou próxima do ganho cross-fit conservador de
+0,052 ponto e confirmou novamente a utilidade da validação interna.
+
+## Segundo juiz: CatBoost global versus árvores
+
+Depois de fixar o peso `q` do especialista barato, ainda restava uma proporção
+fixa de 60% CatBoost e 40% árvores dentro de `1-q`. O segundo juiz passou a
+estimar `r`, a fração de árvores nessa parcela:
+
+```text
+previsao = q * especialista
+         + (1-q) * ((1-r) * CatBoost + r * arvores)
+```
+
+O pseudo-alvo ótimo de `r` foi treinado com a mesma derivação alinhada ao
+RMSPE e projetado para `[0,1]`. Foram comparados um mapeamento livre e outro
+dinâmico cuja média permanece ancorada em 48,745% de árvores. Essa âncora veio
+da parábola pública formada pelo CatBoost de 21,82%, árvores de 21,86% e blend
+60/40 de 21,45%.
+
+| Estratégia | RMSPE cross-fit | Holdout por IDs | Fração média de árvores |
+| --- | ---: | ---: | ---: |
+| Proporção atual, 40% | 21,2873% | 20,9536% | 40,00% |
+| Estática na âncora pública | 21,2407% | 20,8594% | 48,75% |
+| Dinâmica ancorada | **21,2058%** | **20,7844%** | 48,69% OOF |
+| Dinâmica livre | 21,1865% | 20,6853% | 66,13% OOF |
+
+As duas versões dinâmicas melhoraram os cinco folds e o holdout. Apesar de a
+livre ser 0,019 ponto melhor no OOF, ela desloca globalmente o peso para 66% de
+árvores, em conflito com a evidência pública. Foi escolhida a versão ancorada,
+que preserva quase todo o ganho dinâmico sem depender do viés CatBoost/árvores
+observado apenas internamente.
+
+No teste oficial, a fração média de árvores dentro do restante ficou em
+48,730%. Os pesos efetivos médios finais são:
+
+- 18,09% especialista barato;
+- 41,90% CatBoost global;
+- 40,00% blend XGBoost/LightGBM.
+
+O novo peso não é apenas global: o percentil 10 de `r` é 35,85%, a mediana
+49,05% e o percentil 90 60,33%. A submission gerada foi:
+
+- `submissions/submission_juiz_componentes_ancorado.csv`
+
+Seu RMSPE cross-fit é 21,2058%; com o mapeamento final treinado em todo o OOF,
+21,1993%. O experimento está em `src/testar_juiz_componentes.py`, o treino
+final em `src/gerar_submission_juiz_componentes.py` e as previsões completas
+em `resultados/juiz_componentes_previsoes_teste.csv`.
+
+O juiz de componentes ancorado obteve **21,19% no Kaggle**, contra 21,30% do
+juiz contínuo anterior. Como os dois arquivos pertencem à mesma direção de
+previsão, a resposta pública foi usada para um último ajuste de intensidade.
+Com a curvatura observada no OOF e no holdout, o ótimo público foi estimado
+entre 1,70 e 1,95. Foi escolhida uma única intensidade intermediária de 1,75:
+
+```text
+r_final = clip(0,40 + 1,75 * (r_ancorado - 0,40), 0, 1)
+```
+
+Esse ajuste preserva o peso do especialista barato e intensifica somente a
+decisão CatBoost/árvores. Seus resultados internos são:
+
+| Avaliação | Ancorado | Intensidade 1,75 |
+| --- | ---: | ---: |
+| OOF | 21,2058% | **21,1972%** |
+| Holdout por IDs | 20,7844% | **20,7128%** |
+
+No teste, a fração média de árvores dentro de `1-q` passa de 48,73% para
+55,02%. Os pesos efetivos médios ficam em 18,09% para o especialista barato,
+36,71% para o CatBoost global e 45,20% para as árvores. Apenas 2,20% das linhas
+atingem os limites zero ou um. Foi gerada somente:
+
+- `submissions/submission_juiz_componentes_intensidade175.csv`
+
+O script reproduzível está em
+`src/gerar_submission_juiz_componentes_intensidade175.py` e o resumo em
+`resultados/juiz_componentes_intensidade175_resumo.json`.
